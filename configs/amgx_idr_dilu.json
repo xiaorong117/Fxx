@@ -1,0 +1,16 @@
+{
+  "config_version": 2,
+  "solver": {
+    "solver": "IDR",
+    "subspace_dim_s": 4,
+    "preconditioner": {"solver":"MULTICOLOR_DILU","max_iters":1,"scope":"preconditioner"},
+    "max_iters": 2000,
+    "convergence": "RELATIVE_INI",
+    "tolerance": 1e-10,
+    "norm": "L2",
+    "monitor_residual": 1,
+    "obtain_timings": 1,
+    "print_solve_stats": 0,
+    "scope": "main"
+  }
+}

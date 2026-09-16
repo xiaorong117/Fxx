@@ -1,0 +1,15 @@
+{
+  "format": "bubble_virtual_boundary_geometry_audit_v1",
+  "inlet_virtual_count": 1,
+  "outlet_virtual_count": 1,
+  "boundary_connection_count": 2,
+  "derived_node_count": 5,
+  "derived_edge_count": 4,
+  "boundary_throat_length_min_um": 7.5,
+  "boundary_throat_length_max_um": 7.5,
+  "connected_real_virtual_clearance_min_um": 7.5,
+  "new_zero_length_boundary_edge_count": 0,
+  "virtual_nodes_in_nontrivial_zero_distance_cluster": 0,
+  "virtual_node_coordination_distribution": {"1": 2},
+  "overlap_counts": {"virtual_nonconnected_real": 0, "virtual_virtual": 0}
+}

@@ -1,0 +1,34 @@
+{
+  "config_version": 2,
+  "solver": {
+    "solver": "FGMRES",
+    "preconditioner": {
+      "solver": "AMG",
+      "selector": "HMIS",
+      "interpolator": "D2",
+      "smoother": {"solver":"JACOBI_L1","relaxation_factor":1.0,"scope":"jacobi"},
+      "presweeps": 2,
+      "postsweeps": 2,
+      "coarsest_sweeps": 2,
+      "aggressive_levels": 1,
+      "interp_max_elements": 4,
+      "max_row_sum": 0.9,
+      "strength_threshold": 0.25,
+      "coarse_solver": "NOSOLVER",
+      "min_coarse_rows": 2,
+      "max_levels": 50,
+      "max_iters": 1,
+      "cycle": "V",
+      "scope": "amg_solver"
+    },
+    "max_iters": 1000,
+    "gmres_n_restart": 100,
+    "convergence": "RELATIVE_INI",
+    "tolerance": 1e-8,
+    "norm": "L2",
+    "monitor_residual": 1,
+    "obtain_timings": 1,
+    "print_solve_stats": 0,
+    "scope": "main"
+  }
+}

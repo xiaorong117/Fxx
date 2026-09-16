@@ -1,0 +1,5 @@
+# new_throat_id pore_id_1 pore_id_2 source_old_throat_id side length Sw radius area shape_factor volume
+1 4 1 0 1 7.5e-6 1 5e-6 7.853981633974483e-11 0.05 0
+2 1 2 1 1 1e-5 1 2e-6 1.2566370614359172e-11 0.05 1e-16
+3 2 3 2 2 1e-5 1 2e-6 1.2566370614359172e-11 0.05 1e-16
+4 3 5 0 2 7.5e-6 1 5e-6 7.853981633974483e-11 0.05 0

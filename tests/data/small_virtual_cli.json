@@ -1,0 +1,17 @@
+{
+  "case":{"name":"deterministic_virtual_boundary_cli","kind":"deterministic_test","scientific_parameters_confirmed":false,"gas_component":"generic","liquid_composition":"generic","notes":"one-to-one virtual-boundary software test"},
+  "io":{"pore_file":"bubble_dissolution_solver/tests/data/small_virtual_pore.txt","throat_file":"bubble_dissolution_solver/tests/data/small_virtual_throat.txt","connect_audit_file":"bubble_dissolution_solver/tests/data/small_virtual_connect.txt","input_geometry_audit_file":"bubble_dissolution_solver/tests/data/small_virtual_unit_audit.json","virtual_boundary_geometry_audit_file":"bubble_dissolution_solver/tests/data/small_virtual_geometry_audit.json","output_directory":"bubble_dissolution_solver/output/cli_virtual_test","checkpoint_interval_steps":1,"vtk_interval_steps":1},
+  "geometry":{"input_basis":"physical","input_length_unit":"m","voxel_size_um":7.5,"image_dimensions_voxels":[4,1,1],"physical_domain_um":[30,7.5,7.5],"input_length_to_m":1,"input_area_to_m2":1,"input_volume_to_m3":1},
+  "virtual_boundary":{"enabled":true,"boundary_axis":"x","extension_voxels":1,"voxel_size_um":7.5},
+  "input_provenance":{"raw_pore_file":"bubble_dissolution_solver/tests/data/small_virtual_pore.txt","raw_throat_file":"bubble_dissolution_solver/tests/data/small_virtual_throat.txt","base_pore_file":"bubble_dissolution_solver/tests/data/small_virtual_pore.txt","base_throat_file":"bubble_dissolution_solver/tests/data/small_virtual_throat.txt","base_connect_file":"bubble_dissolution_solver/tests/data/small_virtual_connect.txt"},
+  "physics":{"T_K":298.15,"mu_l_Pa_s":0.001,"rho_l_kg_m3":997,"Dm_m2_s":2e-9,"Hcp_mol_m3_Pa":1e-5,"kL_m_s":1e-5,"sigma_N_m":0.072,"contact_angle_rad":0,"molar_mass_kg_mol":0.028,"compressibility_model":"constant_Z","Z":1,"kr_exponent_m":3,"diffusion_area_exponent_alpha":1,"tortuosity":1,"qin_b":6.83,"mass_transfer_mode":"dissolution_only"},
+  "boundary":{"inlet_flag":1,"outlet_flag":2,"Pl_in_abs_Pa":102000,"Pl_out_abs_Pa":101000,"C_in_mol_m3":1,"C_backflow_mol_m3":0.8,"species_mode":"fixed_reservoir_concentration","ignored_when_species_mode_is_copy_adjacent_concentration":false,"outlet_diffusive_condition":"zero_gradient"},
+  "initial":{"C_initial_mol_m3":0.1,"pressure_initialization":"linear_in_x","Sw_source":"pore_file"},
+  "time":{"t_end_s":0.0005,"dt_initial_s":0.0001,"dt_min_s":1e-12,"dt_max_s":0.0001,"cut_factor":0.5,"growth_factor":1.2,"fast_newton_iterations":5,"max_retries_per_step":16},
+  "nonlinear":{"max_iterations":30,"residual_tolerance":1e-8,"update_tolerance":1e-9,"armijo_c1":0.0001,"line_search_reduction":0.5,"line_search_min_lambda":1e-8,"fraction_to_boundary":0.99},
+  "linear":{"backend":"eigen_sparselu","relative_tolerance":1e-10,"max_iterations":2000,"ilut_drop_tolerance":1e-8,"ilut_fill_factor":20},
+  "active_set":{"Sw_min":1e-6,"Sg_off":1e-8,"ng_off_mol":1e-30,"transfer_switch_tolerance_mol_m3":1e-12,"allow_bubble_reactivation":false},
+  "scaling":{"P_ref_Pa":100000,"C_ref_mol_m3":1,"Q_ref_m3_s":1e-12,"Ndot_ref_mol_s":1e-12,"N_scale_mol":1e-24,"V_scale_m3":1e-18},
+  "acceptance":{"mass_balance_hard_limit":1e-10,"volume_balance_hard_limit":1e-10,"reject_step_on_balance_failure":true},
+  "source_notes":{"physics":"deterministic test","boundary":"one virtual node per real boundary control","initial":"deterministic test"}
+}

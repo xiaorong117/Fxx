@@ -1,0 +1,43 @@
+.dashboard-control-token
+__pycache__/
+scripts/__pycache__/
+tests/__pycache__/
+
+# Runtime and scientific case data: never commit simulations, inputs, or
+# derived production/verification evidence to the source repository.
+output/**
+!output/.gitkeep
+*.run.lock
+*.lock
+*.log
+*.tmp
+*.bak
+checkpoint*.json
+run_manifest*.json
+diagnostics.tsv
+global_history.tsv
+segment_history.tsv
+balance_history.tsv
+gas_disappearance_events.tsv
+states.pvd
+state_*.vtp
+*.vtp
+
+# Generated per-case and batch configuration trees contain absolute machine
+# paths and are reproducible from templates plus external PNM inventories.
+configs/batch*/
+configs/boundaryless*/
+configs/repaired*/
+configs/*pilot*/
+configs/*validation*/
+configs/bubble_solver.*.json
+!configs/bubble_solver.research-template.json
+!configs/bubble_solver.smoke.json
+
+# Local build/editor artifacts if a build is performed in-tree.
+build*/
+.cache/
+.vscode/
+
+# Historical local hash inventory, tied to external absolute paths and PNM data.
+relative_pressure_baseline.json

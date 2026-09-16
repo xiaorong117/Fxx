@@ -1,0 +1,17 @@
+{
+  "case": {"name":"REPLACE_WITH_CASE_NAME","kind":"research","scientific_parameters_confirmed":false,"gas_component":null,"liquid_composition":null,"notes":"All null fields require traceable values."},
+  "io": {"pore_file":"PNM_new_pore_virtual.txt","throat_file":"PNM_new_throat_virtual.txt","connect_audit_file":"PNM_new_pore_connect_virtual.txt","input_geometry_audit_file":"bubble_dissolution_solver/output/verification/pnm-physical-unit-audit.json","virtual_boundary_geometry_audit_file":"PNM_new_virtual_boundary_geometry_audit.json","output_directory":"bubble_dissolution_solver/output/research_case","checkpoint_interval_steps":10,"vtk_interval_steps":10},
+  "geometry": {"input_basis":"physical","input_length_unit":"um","voxel_size_um":7.5,"image_dimensions_voxels":[1200,1200,1200],"physical_domain_um":[9000,9000,9000],"input_length_to_m":1e-6,"input_area_to_m2":1e-12,"input_volume_to_m3":1e-18},
+  "virtual_boundary": {"enabled":true,"boundary_axis":"x","extension_voxels":1.0,"voxel_size_um":7.5},
+  "input_provenance": {"raw_pore_file":"PNM_pb.txt","raw_throat_file":"PNM_pt.txt","base_pore_file":"PNM_new_pore.txt","base_throat_file":"PNM_new_throat.txt","base_connect_file":"PNM_new_pore_connect.txt"},
+  "physics": {"T_K":null,"mu_l_Pa_s":null,"rho_l_kg_m3":null,"Dm_m2_s":null,"Hcp_mol_m3_Pa":null,"kL_m_s":null,"sigma_N_m":null,"contact_angle_rad":null,"molar_mass_kg_mol":null,"compressibility_model":"constant_Z","Z":null,"kr_exponent_m":3.0,"diffusion_area_exponent_alpha":1.0,"tortuosity":1.0,"qin_b":6.83,"mass_transfer_mode":"dissolution_only"},
+  "boundary": {"inlet_flag":1,"outlet_flag":2,"Pl_in_abs_Pa":null,"Pl_out_abs_Pa":null,"C_in_mol_m3":null,"C_backflow_mol_m3":null,"species_mode":"copy_adjacent_concentration","ignored_when_species_mode_is_copy_adjacent_concentration":true,"outlet_diffusive_condition":"zero_gradient"},
+  "initial": {"C_initial_mol_m3":null,"pressure_initialization":"linear_in_x","Sw_source":"pore_file"},
+  "time": {"t_end_s":null,"dt_initial_s":null,"dt_min_s":null,"dt_max_s":null,"cut_factor":0.5,"growth_factor":1.5,"fast_newton_iterations":5,"max_retries_per_step":12},
+  "nonlinear": {"max_iterations":30,"residual_tolerance":1e-8,"update_tolerance":1e-9,"armijo_c1":1e-4,"line_search_reduction":0.5,"line_search_min_lambda":1e-8,"fraction_to_boundary":0.99},
+  "linear": {"backend":"eigen_bicgstab_ilut","relative_tolerance":1e-10,"max_iterations":2000,"ilut_drop_tolerance":1e-4,"ilut_fill_factor":10},
+  "active_set": {"Sw_min":1e-6,"Sg_off":1e-8,"ng_off_mol":null,"transfer_switch_tolerance_mol_m3":1e-12,"allow_bubble_reactivation":false},
+  "scaling": {"P_ref_Pa":null,"C_ref_mol_m3":null,"Q_ref_m3_s":null,"Ndot_ref_mol_s":null,"N_scale_mol":1e-30,"V_scale_m3":1e-30},
+  "acceptance": {"mass_balance_hard_limit":1e-6,"volume_balance_hard_limit":1e-6,"reject_step_on_balance_failure":true},
+  "source_notes": {"physics":null,"boundary":null,"initial":null}
+}

@@ -1,0 +1,24 @@
+{
+  "config_version": 2,
+  "solver": {
+    "solver": "FGMRES",
+    "preconditioner": {
+      "solver": "MULTICOLOR_ILU",
+      "max_iters": 1,
+      "coloring_level": 2,
+      "ilu_sparsity_level": 1,
+      "reorder_cols_by_color": 1,
+      "insert_diag_while_reordering": 1,
+      "scope": "preconditioner"
+    },
+    "max_iters": 500,
+    "gmres_n_restart": 100,
+    "convergence": "RELATIVE_INI",
+    "tolerance": 1e-10,
+    "norm": "L2",
+    "monitor_residual": 1,
+    "obtain_timings": 1,
+    "print_solve_stats": 0,
+    "scope": "main"
+  }
+}

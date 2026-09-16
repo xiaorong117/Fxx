@@ -1,0 +1,10 @@
+{
+  "format": "bubble_pnm_physical_unit_audit_v1",
+  "conclusion": "synthetic_SI_test_geometry",
+  "input_basis": "physical",
+  "input_length_unit": "m",
+  "voxel_size_um": 7.5,
+  "image_dimensions_voxels": [4, 1, 1],
+  "physical_domain_um": [30, 7.5, 7.5],
+  "si_conversions": {"input_length_to_m": 1, "input_area_to_m2": 1, "input_volume_to_m3": 1}
+}

@@ -1,0 +1,29 @@
+{
+  "config_version": 2,
+  "solver": {
+    "solver": "FGMRES",
+    "preconditioner": {
+      "solver": "AMG",
+      "algorithm": "AGGREGATION",
+      "smoother": "MULTICOLOR_DILU",
+      "presweeps": 0,
+      "postsweeps": 3,
+      "max_iters": 1,
+      "cycle": "V",
+      "selector": "SIZE_2",
+      "coarse_solver": "DENSE_LU_SOLVER",
+      "min_coarse_rows": 32,
+      "max_levels": 50,
+      "scope": "amg"
+    },
+    "max_iters": 2000,
+    "gmres_n_restart": 100,
+    "convergence": "RELATIVE_INI",
+    "tolerance": 1e-8,
+    "norm": "L2",
+    "monitor_residual": 1,
+    "obtain_timings": 1,
+    "print_solve_stats": 0,
+    "scope": "main"
+  }
+}
