@@ -578,6 +578,10 @@ def main():
     parser.add_argument("--source-audit", type=Path)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--common-pv-horizon", type=float, default=5.0)
+    parser.add_argument("--expected-cases", type=int, default=69,
+                        help="safety check for the number of valid cases; "
+                             "69 is the historical 35+34 batch, 70 includes "
+                             "the repaired 85A15D p08 case")
     args = parser.parse_args()
     project = args.project_root.resolve()
     index_path = (args.index or project / "configs/batch35_flow_pe555_pardiso_v3/batch_cases.json").resolve()
@@ -760,8 +764,9 @@ def main():
     segment = pd.DataFrame(segment_rows)
     spatial_moments = pd.DataFrame(spatial_moment_rows)
     survival = pd.concat(all_survival, ignore_index=True)
-    if len(case) != 69:
-        raise ValueError(f"expected 69 valid cases, obtained {len(case)}")
+    if len(case) != args.expected_cases:
+        raise ValueError(f"expected {args.expected_cases} valid cases, "
+                         f"obtained {len(case)}")
     if case.parent_case.nunique() != 35:
         raise ValueError("expected 35 unique geometries")
 
@@ -934,14 +939,18 @@ def main():
              "gas_longitudinal_variance_normalized_20segment"]].median()
     event_counts = Counter(survival.event_mode)
     max_eps_n, max_eps_v = case.max_abs_epsilon_N.max(), case.max_abs_epsilon_V.max()
-    report = f"""# 69个有效算例的气泡耐久性定量分析（第一版）
+    variant_06 = int((case.variant == "PNM-0.6").sum())
+    variant_08 = int((case.variant == "PNM-0.8").sum())
+    excluded_text = "；".join(
+        f"`{item['run_id']}`（{item['reason']}）" for item in exclusions) or "无"
+    report = f"""# {len(case)}个有效算例的气泡耐久性定量分析（第一版）
 
 ## 数据范围与质量控制
 
-- 纳入：69个有效运行，35套几何；PNM-0.6为35个，PNM-0.8为34个。
-- 排除：`sands-of-85A15D-mu-0.5-100kpa-e_p08`，原因是饱和度源审计失败；未插补。
-- 34套几何具有完整的PNM-0.6/0.8配对。
-- 69个运行均以`main_real_gas_saturation_reached`正常结束。
+- 纳入：{len(case)}个有效运行，{case.parent_case.nunique()}套几何；PNM-0.6为{variant_06}个，PNM-0.8为{variant_08}个。
+- 排除：{excluded_text}
+- {len(paired)}套几何具有完整的PNM-0.6/0.8配对。
+- {len(case)}个运行均以`main_real_gas_saturation_reached`正常结束。
 - 最大`|epsilon_N_adjusted|`={max_eps_n:.6g}；最大`|epsilon_V_adjusted|`={max_eps_v:.6g}。
 - 公共曲线与AUC窗口为0–{args.common_pv_horizon:g} PV，所有有效算例均覆盖该范围。
 
@@ -950,7 +959,7 @@ def main():
 - `PV50`范围：{pv50.min():.4g}–{pv50.max():.4g} PV；中位数{pv50.median():.4g} PV。
 - PNM-0.6的`PV50`中位数：{pair_pv50.median_p06:.4g} PV。
 - PNM-0.8的`PV50`中位数：{pair_pv50.median_p08:.4g} PV。
-- 34个配对中，PNM-0.8相对PNM-0.6的`PV50`中位相对变化：{100*pair_pv50.median_relative_difference:.3g}%。
+- {len(paired)}个配对中，PNM-0.8相对PNM-0.6的`PV50`中位相对变化：{100*pair_pv50.median_relative_difference:.3g}%。
 - 配对差值的95% bootstrap区间：[{pair_pv50.bootstrap_median_difference_ci95_low:.4g}, {pair_pv50.bootstrap_median_difference_ci95_high:.4g}] PV；Wilcoxon p={pair_pv50.wilcoxon_p_value_unadjusted:.4g}。
 - 完整配对几何层面，孔隙率与平均`PV50`的Spearman rho={geometry_key.iloc[0].spearman_rho:.4g}，
   95% geometry-bootstrap区间=[{geometry_key.iloc[0].bootstrap_ci95_low:.4g}, {geometry_key.iloc[0].bootstrap_ci95_high:.4g}]。
@@ -975,9 +984,9 @@ def main():
 
 ## 文件说明
 
-- `case_metrics.tsv`：69行算例级指标。
+- `case_metrics.tsv`：{len(case)}行算例级指标。
 - `retention_curves_common_0_5pv.tsv`：公共PV网格上的气体保留曲线。
-- `paired_p06_p08.tsv`、`paired_effects.tsv`：34组配对及其统计检验。
+- `paired_p06_p08.tsv`、`paired_effects.tsv`：{len(paired)}组配对及其统计检验。
 - `complete_pair_geometry_metrics.tsv`、`geometry_durability_correlations.tsv`：避免伪重复的几何层分析。
 - `initial_gas_morphology_correlations.tsv`：分别在PNM-0.6/0.8内部计算的初始困气形态关联。
 - `factor_level_summaries.tsv`、`blocked_factor_tests.tsv`：分块工况分析。
@@ -990,7 +999,7 @@ def main():
     (output / "ANALYSIS_REPORT_ZH.md").write_text(report)
 
     manifest = {
-        "format": "bubble_batch69_durability_analysis_v1",
+        "format": "bubble_batch_durability_analysis_v1",
         "status": "passed", "script_version": SCRIPT_VERSION,
         "generated_utc": datetime.now(timezone.utc).isoformat(),
         "analysis_is_read_only": True,
