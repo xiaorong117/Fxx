@@ -542,6 +542,70 @@ def figure_summary_heatmap(gradation_master: pd.DataFrame, out: Path) -> None:
     plt.close(fig)
 
 
+def figure_four_inputs(geo: pd.DataFrame, gradation_master: pd.DataFrame,
+                       gradation_stats: pd.DataFrame, trends: pd.DataFrame, out: Path) -> None:
+    """Cu, Cc, mu and overburden side by side, against porosity and AUC."""
+    fig, axes = plt.subplots(2, 4, figsize=(17.0, 7.8))
+    mu_sub = geo[geo.stress_kpa == 100]
+    stress_sub = geo[geo.mu == 0.5]
+
+    def stat(param: str | None, outcome: str, design: str | None) -> str:
+        if param is not None:
+            row = gradation_stats[(gradation_stats.param == param) & (gradation_stats.outcome == outcome)]
+            if len(row):
+                row = row.iloc[0]
+                return f"rho={row.rho_gradation_means:+.3f}, perm p={row.perm_p_blocked:.3f}"
+        if design is not None:
+            row = trends[(trends.design == design) & (trends.outcome == outcome)]
+            if len(row):
+                row = row.iloc[0]
+                return (f"Page z={row.z:+.2f}, "
+                        f"p={min(row.p_increasing, row.p_decreasing):.3f}")
+        return ""
+
+    top = [("Cu", "control_volume_porosity", "between-gradation"), ("Cc", "control_volume_porosity", "between-gradation"),
+           ("mu", "control_volume_porosity", "mu"), ("overburden", "control_volume_porosity", "overburden")]
+    bottom = [("Cu", "auc", "between-gradation"), ("Cc", "auc", "between-gradation"),
+              ("mu", "auc", "mu"), ("overburden", "auc", "overburden")]
+    colors = dict(zip(BATCH_GRADATIONS, plt.cm.tab10(np.linspace(0, 1, len(BATCH_GRADATIONS)))))
+
+    for col, (name, outcome, kind) in enumerate(bottom):
+        for row_index, (items, ylabel) in enumerate(((top, "porosity /-"), (bottom, "0-5 PV AUC /-"))):
+            name, outcome, kind = items[col]
+            ax = axes[row_index, col]
+            if kind == "between-gradation":
+                ax.scatter(gradation_master[name], gradation_master[outcome], s=52, color="#1f77b4", zorder=3)
+                for gradation in gradation_master.index:
+                    ax.annotate(gradation, (gradation_master[name][gradation], gradation_master[outcome][gradation]),
+                                fontsize=7, xytext=(4, 3), textcoords="offset points")
+            elif kind == "mu":
+                for gradation, part in mu_sub.groupby("gradation"):
+                    part = part.sort_values("mu")
+                    ax.plot(part.mu, part[outcome], marker="o", ms=4, lw=1.3, color=colors[gradation])
+            else:
+                for gradation, part in stress_sub.groupby("gradation"):
+                    part = part.sort_values("stress_kpa")
+                    ax.plot(part.stress_kpa, part[outcome], marker="o", ms=4, lw=1.3, color=colors[gradation])
+            label = {"between-gradation": name, "mu": "mu (0.1/0.3/0.5 @100 kPa)",
+                     "overburden": "overburden (20/100/200 kPa @mu=0.5)"}[kind]
+            if kind == "between-gradation":
+                subtitle = stat(name, outcome, None)
+            else:
+                design = "mu@100kPa" if kind == "mu" else "overburden@mu=0.5"
+                subtitle = stat(None, outcome, design)
+            ax.set_title(f"{label}\n{subtitle}", fontsize=8.5)
+            ax.set_xlabel(label)
+            ax.set_ylabel(ylabel)
+            ax.grid(alpha=0.3)
+    axes[0, 0].legend(fontsize=6.6, ncol=2)
+    for ax in (axes[0, 2], axes[0, 3]):
+        ax.legend(fontsize=6.2, ncol=2, loc="lower right", framealpha=0.9)
+    fig.suptitle("Four core macro inputs: Cu, Cc (between gradations) and mu, overburden (within gradation)")
+    fig.tight_layout(rect=(0, 0, 1, 0.94))
+    fig.savefig(out / "07_four_inputs_panels.png", dpi=180)
+    plt.close(fig)
+
+
 # --------------------------------------------------------------------------- #
 # main
 # --------------------------------------------------------------------------- #
@@ -560,6 +624,10 @@ def main() -> int:
 
     curves = parse_psd_workbook(args.psd)
     params = gradation_parameters(curves)
+    # Only the 7 gradations that actually have PNM runs enter the statistics;
+    # the workbook also contains 100A and 50AB, which are kept in
+    # gradation_parameters.csv for completeness but are not part of this batch.
+    params_batch = params.reindex(BATCH_GRADATIONS)
     params.to_csv(out / "gradation_parameters.csv")
     pd.DataFrame(
         [(g, d, p) for g, pts in curves.items() for d, p in pts],
@@ -701,6 +769,73 @@ def main() -> int:
     mediator = pd.DataFrame(mediator_rows)
     mediator.to_csv(out / "mediation_chains.tsv", sep="\t", index=False)
 
+    # ---- four core macro inputs ------------------------------------------- #
+    four_rows = []
+    for name, level, unit, lower, upper in (
+        ("Cu", "between_gradation", "-", params_batch.Cu.min(), params_batch.Cu.max()),
+        ("Cc", "between_gradation", "-", params_batch.Cc.min(), params_batch.Cc.max()),
+        ("mu", "within_gradation", "-", 0.1, 0.5),
+        ("overburden_kpa", "within_gradation", "kPa", 20.0, 200.0),
+    ):
+        if level == "between_gradation":
+            for outcome in ["control_volume_porosity", "auc", "pv50"]:
+                gs = gradation_stats[(gradation_stats.param == name) & (gradation_stats.outcome == outcome)].iloc[0]
+                four_rows.append(dict(indicator=name, level=level, unit=unit,
+                                      range=f"{lower:.3g}-{upper:.3g}", outcome=outcome,
+                                      statistic=f"Spearman rho={gs.rho_gradation_means:+.3f}",
+                                      p_value=gs.perm_p_blocked, fdr_bh=gs.fdr_bh,
+                                      direction="positive" if gs.rho_gradation_means > 0 else "negative"))
+        else:
+            design = "mu@100kPa" if name == "mu" else "overburden@mu=0.5"
+            for outcome in ["control_volume_porosity", "auc", "pv50"]:
+                tr = trends[(trends.design == design) & (trends.outcome == outcome)].iloc[0]
+                p_inc = tr.p_increasing if tr.z >= 0 else tr.p_decreasing
+                four_rows.append(dict(indicator=name, level=level, unit=unit,
+                                      range=f"{lower:.3g}-{upper:.3g}", outcome=outcome,
+                                      statistic=f"Page z={tr.z:+.2f}", p_value=p_inc, fdr_bh=np.nan,
+                                      direction="positive" if tr.z > 0 else "negative"))
+    four_inputs = pd.DataFrame(four_rows)
+    four_inputs.to_csv(out / "four_inputs_summary.tsv", sep="\t", index=False)
+
+    # collinearity of the gradation-level indicators
+    collinearity = []
+    for a, b in [("Cu", "Cc"), ("Cu", "d50_mm"), ("Cc", "d50_mm"),
+                 ("Cu", "span_d90_d10"), ("Cc", "span_d90_d10")]:
+        rho = spearmanr(params_batch[a], params_batch[b])[0]
+        collinearity.append(dict(indicator_a=a, indicator_b=b, rho=rho))
+    pd.DataFrame(collinearity).to_csv(out / "input_collinearity.tsv", sep="\t", index=False)
+
+    # ---- do Cu / Cc moderate the mu and overburden sensitivities? ---------- #
+    sensitivity_rows = []
+    for gradation, sub in geo.groupby("gradation"):
+        mu_sub = sub[sub.stress_kpa == 100].sort_values("mu")
+        st_sub = sub[sub.mu == 0.5].sort_values("stress_kpa")
+        x_mu = mu_sub.mu.to_numpy(float)
+        x_st = np.log10(st_sub.stress_kpa.to_numpy(float))
+
+        def slope(x, y):
+            return float(np.polyfit(x, np.asarray(y, float), 1)[0])
+
+        sensitivity_rows.append(dict(
+            gradation=gradation,
+            d_porosity_d_mu=slope(x_mu, mu_sub.control_volume_porosity),
+            d_auc_d_mu=slope(x_mu, mu_sub.auc),
+            d_pv50_d_mu=slope(x_mu, mu_sub.pv50),
+            d_porosity_d_log_overburden=slope(x_st, st_sub.control_volume_porosity),
+            d_auc_d_log_overburden=slope(x_st, st_sub.auc),
+            d_pv50_d_log_overburden=slope(x_st, st_sub.pv50),
+        ))
+    sensitivity = pd.DataFrame(sensitivity_rows).set_index("gradation")
+    sensitivity.to_csv(out / "per_gradation_sensitivities.csv")
+    moderation_rows = []
+    for column in sensitivity.columns:
+        for indicator in ["Cu", "Cc"]:
+            rho = spearmanr(params_batch[indicator], sensitivity[column])[0]
+            moderation_rows.append(dict(sensitivity=column, indicator=indicator, rho=rho,
+                                        n=len(sensitivity)))
+    moderation = pd.DataFrame(moderation_rows)
+    moderation.to_csv(out / "moderation_of_within_gradation_effects.tsv", sep="\t", index=False)
+
     # ---- unconditional within-variant gas -> durability (from batch70) ---- #
     vari_rows = []
     for tag in ("06", "08"):
@@ -719,6 +854,7 @@ def main() -> int:
     figure_between_within(geo, figures_dir)
     figure_gas_chain(geo, gradation_master, figures_dir)
     figure_summary_heatmap(gradation_master, figures_dir)
+    figure_four_inputs(geo, gradation_master, gradation_stats, trends, figures_dir)
 
     # ---- manifest --------------------------------------------------------- #
     manifest = {
